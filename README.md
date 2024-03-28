@@ -1,2 +1,2 @@
 # daggerverse
-Dagger functions monorepo
+Dagger(verse) functions
