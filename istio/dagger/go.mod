@@ -12,5 +12,6 @@ require (
 
 require (
 	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/google/go-github/v61 v61.0.0 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 )

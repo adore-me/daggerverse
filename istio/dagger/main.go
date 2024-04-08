@@ -34,7 +34,7 @@ func New(
 	// +optional
 	// +default="./test-data/istio-version.yaml"
 	cmPath string,
-	// Directory with all the kube YAML resources. Usually the root directory of the workdir.
+	// RepoDir with all the kube YAML resources. Usually the root directory of the workdir.
 	dir *Directory,
 ) *Istio {
 	i := &Istio{}
@@ -117,7 +117,7 @@ func (m *Istio) setLocalVersion() error {
 	return nil
 }
 
-// Check if the latest Istio version is newer than the local version
+// IsNewerVersion Check if the latest Istio version is newer than the local version
 //
 // Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. is-new-version
 func (m *Istio) IsNewerVersion() (bool, error) {
@@ -138,6 +138,41 @@ func (m *Istio) IsNewerVersion() (bool, error) {
 	}
 
 	return false, nil
+}
+
+// UpdateVersionCm Update the version in the ConfigMap file
+//
+// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. update-version-cm
+func (m *Istio) UpdateVersionCm() (string, error) {
+	isNewerVersion, err := m.IsNewerVersion()
+	if err != nil {
+		return "", fmt.Errorf("failed to check if newer version: %w", err)
+	}
+	if !isNewerVersion {
+		return fmt.Sprintf("No update needed. Latest version is %s", m.LatestVersion), nil
+	}
+
+	ctx := context.Background()
+
+	f := m.ResourceDir.File(m.CmPath)
+	content, err := f.Contents(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file contents: %w", err)
+	}
+
+	iVersion := &IstioVersionCm{}
+	if err := yaml.Unmarshal([]byte(content), iVersion); err != nil {
+		return "", fmt.Errorf("failed to unmarshal yaml: %w", err)
+	}
+
+	iVersion.Data.Version = m.LatestVersion
+
+	newContent, err := yaml.Marshal(iVersion)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal yaml: %w", err)
+	}
+
+	return string(newContent), nil
 }
 
 func (m *Istio) CreateUpdatePR() string {
