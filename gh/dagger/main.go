@@ -75,8 +75,25 @@ func (m *Gh) CreateLocalBranch(
 		return "", fmt.Errorf("failed to open repository: %v", err)
 	}
 
-	// Create a new branchName
+	// Switch to the desired branch
+	// Check if the branch already exists
+	_, err = gitRepo.Reference(plumbing.NewBranchReferenceName(m.BaseBranch), true)
+	if err != nil {
+		return "", fmt.Errorf("failed to get reference: %v", err)
+	}
+
+	// Checkout the base branch
+	wt, err := gitRepo.Worktree()
+	if err != nil {
+		return "", fmt.Errorf("failed to get worktree: %v", err)
+	}
+	err = wt.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(m.BaseBranch),
+	})
+
+	// Create a new branch from the base branch
 	headRef, err := gitRepo.Head()
+	// Checkout specific branch
 	if err != nil {
 		return "", fmt.Errorf("failed to get HEAD: %v", err)
 	}
@@ -223,9 +240,9 @@ func (m *Gh) CreatePullRequest(
 		Head:  github.String(newBranch),
 		Base:  github.String(baseBranch),
 	}
-	_, _, err = client.PullRequests.Create(ctx, m.Owner, m.Repo, newPR)
+	_, rsp, err := client.PullRequests.Create(ctx, m.Owner, m.Repo, newPR)
 	if err != nil {
-		return "", fmt.Errorf("failed to create pull request: %v", err)
+		return "", fmt.Errorf("failed to create pull request with error: %v.\nMore details in response: %v", err, rsp.Body)
 	}
 
 	return "successfully created the pull request", nil
