@@ -138,7 +138,7 @@ func (m *Gh) CommitChangesInNewBranch(
 	// Commit the changes
 	cOpts := &git.CommitOptions{
 		All: true,
-		Committer: &object.Signature{
+		Author: &object.Signature{
 			Name:  "Dagger",
 			Email: "mihai.g@adoreme.com",
 		},
