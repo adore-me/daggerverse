@@ -117,6 +117,20 @@ func (m *Istio) setLocalVersion() error {
 	return nil
 }
 
+// GetLatestVersion GetLocalVersion Get the local Istio version
+//
+// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. get-local-version
+func (m *Istio) GetLatestVersion() string {
+	return m.LatestVersion
+}
+
+// GetLocalVersion Get the local Istio version
+//
+// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. get-local-version
+func (m *Istio) GetLocalVersion() string {
+	return m.LocalVersion
+}
+
 // IsNewerVersion Check if the latest Istio version is newer than the local version
 //
 // Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. is-new-version
