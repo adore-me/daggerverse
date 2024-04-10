@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/google/go-github/v61/github"
 )
 
@@ -135,7 +136,14 @@ func (m *Gh) CommitChangesInNewBranch(
 	}
 
 	// Commit the changes
-	_, err = wt.Commit(commitTitle, &git.CommitOptions{All: true})
+	cOpts := &git.CommitOptions{
+		All: true,
+		Committer: &object.Signature{
+			Name:  "Dagger",
+			Email: "mihai.g@adoreme.com",
+		},
+	}
+	_, err = wt.Commit(commitTitle, cOpts)
 	if err != nil {
 		return "", fmt.Errorf("failed to commit changes: %v", err)
 	}
