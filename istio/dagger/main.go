@@ -1,8 +1,4 @@
 // This module handles the Istio version management.
-//
-// The GetLatestVersion function returns the latest Istio version released on GitHub.
-// The GetLocalVersion function reads the local Istio version from the provided ConfigMap file.
-// The IsNewerVersion function compares the latest Istio version with the local version and returns true if the latest version is newer.
 package main
 
 import (
@@ -110,7 +106,7 @@ func (m *Istio) setLocalVersion() error {
 
 // IsNewerVersion Check if the latest Istio version is newer than the local version
 //
-// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. is-new-version
+// Example usage: dagger call --config-map=clusters/dev/istio-version.yaml is-new-version
 func (m *Istio) IsNewerVersion() (bool, error) {
 	latestVersion, err := semver.NewVersion(m.LatestVersion)
 	if err != nil {
