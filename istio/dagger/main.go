@@ -16,14 +16,10 @@ import (
 )
 
 type Istio struct {
-	// +private
 	LatestVersion string
+	LocalVersion  string
 	// +private
-	LocalVersion string
-	// +private
-	ResourceDir *Directory
-	// +private
-	CmPath string
+	ConfigMap *File
 }
 
 // New creates a new Istio module with the provided ConfigMap file and Directory
@@ -31,15 +27,11 @@ type Istio struct {
 // Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. is-new-version
 func New(
 	// ConfigMap (that stores istio current version) file path. Should be relative to the dir parameter.
-	// +optional
-	// +default="./test-data/istio-version.yaml"
-	cmPath string,
-	// RepoDir with all the kube YAML resources. Usually the root directory of the workdir.
-	dir *Directory,
+	// +required
+	ConfigMap *File,
 ) *Istio {
 	i := &Istio{}
-	i.ResourceDir = dir
-	i.CmPath = cmPath
+	i.ConfigMap = ConfigMap
 	if err := i.setLocalVersion(); err != nil {
 		panic(err)
 	}
@@ -101,8 +93,7 @@ func (m *Istio) setLatestVersion() error {
 func (m *Istio) setLocalVersion() error {
 	ctx := context.Background()
 
-	f := m.ResourceDir.File(m.CmPath)
-	content, err := f.Contents(ctx)
+	content, err := m.ConfigMap.Contents(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to read file contents: %w", err)
 	}
@@ -115,20 +106,6 @@ func (m *Istio) setLocalVersion() error {
 	m.LocalVersion = iVersion.Data.Version
 
 	return nil
-}
-
-// GetLatestVersion GetLocalVersion Get the local Istio version
-//
-// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. get-local-version
-func (m *Istio) GetLatestVersion() string {
-	return m.LatestVersion
-}
-
-// GetLocalVersion Get the local Istio version
-//
-// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. get-local-version
-func (m *Istio) GetLocalVersion() string {
-	return m.LocalVersion
 }
 
 // IsNewerVersion Check if the latest Istio version is newer than the local version
@@ -154,10 +131,10 @@ func (m *Istio) IsNewerVersion() (bool, error) {
 	return false, nil
 }
 
-// UpdateVersionCm Update the version in the ConfigMap file
+// UpdateCmVersion Update the version in the ConfigMap file
 //
-// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml --dir=. update-version-cm
-func (m *Istio) UpdateVersionCm() (string, error) {
+// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml update-version-cm
+func (m *Istio) UpdateCmVersion() (string, error) {
 	isNewerVersion, err := m.IsNewerVersion()
 	if err != nil {
 		return "", fmt.Errorf("failed to check if newer version: %w", err)
@@ -167,9 +144,7 @@ func (m *Istio) UpdateVersionCm() (string, error) {
 	}
 
 	ctx := context.Background()
-
-	f := m.ResourceDir.File(m.CmPath)
-	content, err := f.Contents(ctx)
+	content, err := m.ConfigMap.Contents(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to read file contents: %w", err)
 	}
@@ -187,17 +162,4 @@ func (m *Istio) UpdateVersionCm() (string, error) {
 	}
 
 	return string(newContent), nil
-}
-
-func (m *Istio) CreateUpdatePR() string {
-	isNewerVersion, err := m.IsNewerVersion()
-	if err != nil {
-		return fmt.Sprintf("Failed to check if newer version: %v", err)
-	}
-
-	if isNewerVersion {
-		return "Create PR"
-	}
-
-	return "No PR needed"
 }
