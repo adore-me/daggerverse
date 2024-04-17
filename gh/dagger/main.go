@@ -12,9 +12,6 @@ type Gh struct {
 	// The token to authenticate with GitHub
 	// +private
 	Token *Secret
-	// RepoDir of the GitHub repo. Usually the root directory of the workdir.
-	// +private
-	RepoPath *Directory
 }
 
 // New creates a new GitHub module with the provided inputs
@@ -26,23 +23,23 @@ func New(
 	// The token to authenticate with GitHub
 	// +required
 	token *Secret,
-	// RepoDir of the GitHub repo. Usually the root directory of the workdir.
-	// +required
-	repoPath *Directory,
 ) *Gh {
 	return &Gh{
 		BaseBranch: baseBranch,
 		Token:      token,
-		RepoPath:   repoPath,
 	}
 }
 
 // RunGit runs a command using the git CLI.
 //
-// Example usage: dagger call --token=env:TOKEN --cmd="status' --base=main --head=test-daggerverse" --version="2.43.0"
+// Example usage: dagger call --token=env:TOKEN --base-branch=main run-git --cmd="status" --repo-path="/workspace/repo"
 func (m *Gh) RunGit(
 	ctx context.Context,
+	// RepoDir of the GitHub repo
+	// +required
+	repoPath *Directory,
 	// command to run
+	// +required
 	cmd string,
 	// version of the Github CLI
 	// +optional
@@ -51,22 +48,25 @@ func (m *Gh) RunGit(
 ) (string, error) {
 	return dag.Container().
 		From("alpine/git:"+version).
-		WithDirectory("/workspace", m.RepoPath, ContainerWithDirectoryOpts{}).
+		WithDirectory("/workspace", repoPath, ContainerWithDirectoryOpts{}).
 		WithSecretVariable("GITHUB_TOKEN", m.Token).
 		WithWorkdir("/workspace").
 		WithExec(
 			[]string{"sh", "-c", strings.Join([]string{"git", cmd}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
-		).
-		Stdout(ctx)
+		).Stdout(ctx)
 }
 
 // RunGh runs a command using the git CLI.
 //
-// Example usage: dagger call --token=env:TOKEN --cmd="status' --base=main --head=test-daggerverse" --version="2.43.0"
+// Example usage: dagger call --token=env:TOKEN --base-branch=main run-gh --cmd="status" --repo-path="/workspace/repo"
 func (m *Gh) RunGh(
 	ctx context.Context,
+	// RepoDir of the GitHub repo
+	// +required
+	repoPath *Directory,
 	// command to run
+	// +required
 	cmd string,
 	// version of the Github CLI
 	// +optional
@@ -75,12 +75,11 @@ func (m *Gh) RunGh(
 ) (string, error) {
 	return dag.Container().
 		From("maniator/gh:v"+version).
-		WithDirectory("/workspace", m.RepoPath, ContainerWithDirectoryOpts{}).
+		WithDirectory("/workspace", repoPath, ContainerWithDirectoryOpts{}).
 		WithSecretVariable("GITHUB_TOKEN", m.Token).
 		WithWorkdir("/workspace").
 		WithExec(
 			[]string{"sh", "-c", strings.Join([]string{"gh", cmd}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
-		).
-		Stdout(ctx)
+		).Stdout(ctx)
 }

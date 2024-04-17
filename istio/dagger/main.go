@@ -127,10 +127,10 @@ func (m *Istio) IsNewerVersion() (bool, error) {
 	return false, nil
 }
 
-// UpdateCmVersion Update the version in the ConfigMap file
+// ReturnUpdatedCm Update the version in the ConfigMap file
 //
-// Example usage: dagger call --cm-path=clusters/dev/istio-version.yaml update-version-cm
-func (m *Istio) UpdateCmVersion() (string, error) {
+// Example usage: dagger call --config-map=./clusters/dev/istio-version.yaml update-version-cm
+func (m *Istio) ReturnUpdatedCm() (string, error) {
 	isNewerVersion, err := m.IsNewerVersion()
 	if err != nil {
 		return "", fmt.Errorf("failed to check if newer version: %w", err)
