@@ -17,12 +17,12 @@ type Gh struct {
 
 // New creates a new GitHub module with the provided inputs
 func New(
-	// The base branch of the repository (ex: main, master)
-	// +optional
-	// +default="master"
+// The base branch of the repository (ex: main, master)
+// +optional
+// +default="master"
 	baseBranch string,
-	// The token to authenticate with GitHub
-	// +required
+// The token to authenticate with GitHub
+// +required
 	token *Secret,
 ) *Gh {
 	return &Gh{
@@ -36,17 +36,17 @@ func New(
 // Example usage: dagger call --token=env:TOKEN --base-branch=main run-git --cmd="status" --repo-path="/workspace/repo"
 func (m *Gh) RunGit(
 	ctx context.Context,
-	// RepoDir of the GitHub repo
-	// +required
+// RepoDir of the GitHub repo
+// +required
 	repoPath *Directory,
-	// command to run
-	// +required
+// command to run
+// +required
 	cmd string,
-	// version of the Github CLI
-	// +optional
-	// +default="2.43.0"
+// version of the Github CLI
+// +optional
+// +default="2.43.0"
 	version string,
-) (*Container, error) {
+) (string, error) {
 	c, err := dag.Container().
 		From("alpine/git:"+version).
 		WithDirectory("/workspace", repoPath, ContainerWithDirectoryOpts{}).
@@ -57,10 +57,10 @@ func (m *Gh) RunGit(
 			ContainerWithExecOpts{SkipEntrypoint: true},
 		).Sync(ctx)
 	if err != nil {
-		return &Container{}, fmt.Errorf("failed to run git command: %w", err)
+		return "", fmt.Errorf("failed to run git command: %w", err)
 	}
 
-	return c, nil
+	return c.Stdout(ctx)
 }
 
 // RunGh runs a command using the git CLI.
@@ -68,15 +68,15 @@ func (m *Gh) RunGit(
 // Example usage: dagger call --token=env:TOKEN --base-branch=main run-gh --cmd="status" --repo-path="/workspace/repo"
 func (m *Gh) RunGh(
 	ctx context.Context,
-	// RepoDir of the GitHub repo
-	// +required
+// RepoDir of the GitHub repo
+// +required
 	repoPath *Directory,
-	// command to run
-	// +required
+// command to run
+// +required
 	cmd string,
-	// version of the Github CLI
-	// +optional
-	// +default="2.47.0"
+// version of the Github CLI
+// +optional
+// +default="2.47.0"
 	version string,
 ) (string, error) {
 	c, err := dag.Container().
