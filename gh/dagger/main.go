@@ -55,7 +55,7 @@ func (m *Gh) RunGit(
 		WithSecretVariable("GITHUB_TOKEN", m.Token).
 		WithWorkdir("/workspace").
 		WithExec(
-			[]string{"sh", "-c", strings.Join([]string{"gh", cmd}, " ")},
+			[]string{"sh", "-c", strings.Join([]string{"git", cmd}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
 		).
 		Stdout(ctx)
