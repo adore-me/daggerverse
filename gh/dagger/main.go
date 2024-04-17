@@ -46,6 +46,14 @@ func (m *Gh) RunGit(
 	// +optional
 	// +default="2.43.0"
 	version string,
+	// user email
+	// +optional
+	// +default="action@github.com"
+	userEmail string,
+	// user name
+	// +optional
+	// +default="GitHub Action"
+	userName string,
 ) (*Container, error) {
 	c, err := dag.Container().
 		From("alpine/git:"+version).
@@ -53,11 +61,11 @@ func (m *Gh) RunGit(
 		WithSecretVariable("GITHUB_TOKEN", m.Token).
 		WithWorkdir("/workspace").
 		WithExec(
-			[]string{"sh", "-c", strings.Join([]string{"git", "config --local user.email 'action@github.com'"}, " ")},
+			[]string{"sh", "-c", strings.Join([]string{"git", "config --local user.email '" + userEmail + "'"}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
 		).
 		WithExec(
-			[]string{"sh", "-c", strings.Join([]string{"git", "config --local user.name 'GitHub Action'"}, " ")},
+			[]string{"sh", "-c", strings.Join([]string{"git", "config --local user.name '" + userName + "'"}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
 		).
 		WithExec(
