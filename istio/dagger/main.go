@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"dagger/istio/internal/dagger"
 	"encoding/json"
 	"fmt"
 	"github.com/Masterminds/semver"
@@ -156,6 +157,12 @@ func (m *Istio) ReturnUpdatedCm() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal yaml: %w", err)
 	}
+
+	m.ConfigMap = m.ConfigMap.With(func(r *dagger.File) *dagger.File {
+		nc := string(newContent)
+		r.contents = &nc
+		return r
+	})
 
 	return string(newContent), nil
 }
