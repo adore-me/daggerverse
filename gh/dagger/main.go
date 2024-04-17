@@ -61,11 +61,11 @@ func (m *Gh) RunGit(
 		WithSecretVariable("GITHUB_TOKEN", m.Token).
 		WithWorkdir("/workspace").
 		WithExec(
-			[]string{"sh", "-c", strings.Join([]string{"git", "config --local user.email '" + userEmail + "'"}, " ")},
+			[]string{"sh", "-c", strings.Join([]string{"git", "config --global user.email '" + userEmail + "'"}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
 		).
 		WithExec(
-			[]string{"sh", "-c", strings.Join([]string{"git", "config --local user.name '" + userName + "'"}, " ")},
+			[]string{"sh", "-c", strings.Join([]string{"git", "config --global user.name '" + userName + "'"}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
 		).
 		WithExec(
