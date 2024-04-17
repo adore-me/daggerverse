@@ -46,8 +46,8 @@ func (m *Gh) RunGit(
 	// +optional
 	// +default="2.43.0"
 	version string,
-) (string, error) {
-	c, err := dag.Container().
+) (*Container, *Directory, error) {
+	c := dag.Container().
 		From("alpine/git:"+version).
 		WithDirectory("/workspace", repoPath, ContainerWithDirectoryOpts{}).
 		WithSecretVariable("GITHUB_TOKEN", m.Token).
@@ -55,12 +55,9 @@ func (m *Gh) RunGit(
 		WithExec(
 			[]string{"sh", "-c", strings.Join([]string{"git", cmd}, " ")},
 			ContainerWithExecOpts{SkipEntrypoint: true},
-		).Sync(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to run git command: %w", err)
-	}
+		)
 
-	return c.Stdout(ctx)
+	return c, c.Directory("/workspace"), nil
 }
 
 // RunGh runs a command using the git CLI.
