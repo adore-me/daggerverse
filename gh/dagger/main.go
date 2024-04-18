@@ -9,7 +9,6 @@ import (
 
 type Gh struct {
 	// RepoDir of the GitHub repo
-	// +private
 	RepoPath *Directory
 	// The base branch of the repository (ex: main, master)
 	// +private
