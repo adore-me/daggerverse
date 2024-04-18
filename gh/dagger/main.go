@@ -9,7 +9,7 @@ import (
 
 type Gh struct {
 	// RepoDir of the GitHub repo
-	RepoPath *Directory
+	RepoDir *Directory
 	// The base branch of the repository (ex: main, master)
 	// +private
 	BaseBranch string
@@ -32,10 +32,14 @@ func New(
 	token *Secret,
 ) *Gh {
 	return &Gh{
-		RepoPath:   repoPath,
+		RepoDir:    repoPath,
 		BaseBranch: baseBranch,
 		Token:      token,
 	}
+}
+
+func (m *Gh) updateRepoDir(repoDir *Directory) {
+	m.RepoDir = repoDir
 }
 
 // RunGit runs a command using the git CLI.
@@ -71,7 +75,7 @@ func (m *Gh) RunGit(
 
 	c, err := dag.Container().
 		From("alpine/git:"+version).
-		WithDirectory("/workspace", m.RepoPath, ContainerWithDirectoryOpts{}).
+		WithDirectory("/workspace", m.RepoDir, ContainerWithDirectoryOpts{}).
 		WithSecretVariable("GITHUB_TOKEN", m.Token).
 		WithWorkdir("/workspace").
 		WithExec(
@@ -100,11 +104,13 @@ func (m *Gh) RunGit(
 		return &Container{}, fmt.Errorf("failed to run git command: %w", err)
 	}
 
+	m.updateRepoDir(c.Directory("/workspace"))
+
 	return c, nil
 }
 
 func (m *Gh) extractRepoOwnerAndName(ctx context.Context) (owner string, repo string, err error) {
-	if _, err := m.RepoPath.File(".git/config").Export(ctx, "/workspace/git-config"); err != nil {
+	if _, err := m.RepoDir.File(".git/config").Export(ctx, "/workspace/git-config"); err != nil {
 		return "", "", fmt.Errorf("failed to export git config: %w", err)
 	}
 
